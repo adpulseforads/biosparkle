@@ -12,6 +12,7 @@ export interface Profile {
   bio: string;
   imageUrl: string;
   theme: Theme;
+  username?: string;
 }
 
 export interface Theme {
@@ -20,6 +21,17 @@ export interface Theme {
   backgroundColor: string;
   buttonStyle: string;
   fontFamily: string;
+}
+
+export interface UserData {
+  uid: string;
+  profile: Profile;
+  links: Link[];
+  username?: string;
+  analytics?: {
+    views: number;
+    clicks: number;
+  };
 }
 
 export const defaultThemes: Theme[] = [

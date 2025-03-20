@@ -1,9 +1,23 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Bell, Settings, User } from 'lucide-react';
+import { Bell, Settings, User, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
+import { toast } from 'sonner';
 
 const Header: React.FC = () => {
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      toast.error('Failed to log out');
+    }
+  };
+
   return (
     <header className="border-b animate-fade-in">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -21,10 +35,29 @@ const Header: React.FC = () => {
           <Button variant="ghost" size="icon" className="transition-all-200">
             <Settings className="h-[1.2rem] w-[1.2rem]" />
           </Button>
-          <Button variant="outline" className="gap-2 transition-all-200">
-            <User className="h-[1rem] w-[1rem]" />
-            <span className="hidden sm:inline">Profile</span>
-          </Button>
+          {currentUser ? (
+            <>
+              <Button variant="outline" className="gap-2 transition-all-200">
+                <User className="h-[1rem] w-[1rem]" />
+                <span className="hidden sm:inline">Profile</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="transition-all-200"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-[1.2rem] w-[1.2rem]" />
+              </Button>
+            </>
+          ) : (
+            <Link to="/sign-in">
+              <Button variant="outline" className="gap-2 transition-all-200">
+                <User className="h-[1rem] w-[1rem]" />
+                <span className="hidden sm:inline">Sign In</span>
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>
