@@ -24,6 +24,7 @@ const UserProfile = () => {
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
+          console.error(`User not found with username: ${username}`);
           setError('User not found');
           setLoading(false);
           return;
@@ -32,6 +33,7 @@ const UserProfile = () => {
         // Get the first matching user
         const userDoc = querySnapshot.docs[0];
         const userData = userDoc.data() as UserData;
+        console.log("Loaded user data:", userData);
         setUserData(userData);
 
         // Update view count
@@ -47,6 +49,7 @@ const UserProfile = () => {
     };
 
     if (username) {
+      console.log("Fetching profile for username:", username);
       fetchUserProfile();
     }
   }, [username]);
@@ -96,14 +99,15 @@ const UserProfile = () => {
   const enabledLinks = userData.links.filter(link => link.enabled);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in" 
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in" 
       style={{ 
-        backgroundColor: userData.profile.theme.backgroundColor === 'bg-gradient-to-br from-purple-100 to-blue-100' 
+        backgroundColor: userData.profile.theme.backgroundColor.startsWith('bg-gradient') 
           ? undefined 
           : userData.profile.theme.backgroundColor
       }}
     >
-      <div className={`max-w-md w-full mx-auto py-8 px-4 rounded-xl ${userData.profile.theme.backgroundColor === 'bg-gradient-to-br from-purple-100 to-blue-100' ? 'bg-gradient-to-br from-purple-100 to-blue-100' : ''}`}>
+      <div className={`max-w-md w-full mx-auto py-8 px-4 rounded-xl ${userData.profile.theme.backgroundColor.startsWith('bg-gradient') ? userData.profile.theme.backgroundColor : ''}`}>
         <div className="flex flex-col items-center pt-4 pb-6 animate-slide-down">
           <Avatar className="h-24 w-24 mb-4">
             <AvatarImage src={userData.profile.imageUrl} alt={userData.profile.displayName} />
