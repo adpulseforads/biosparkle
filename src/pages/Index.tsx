@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, Profile, Theme, defaultThemes } from '@/lib/types';
+import { Link, Profile, Theme, defaultThemes, UserData } from '@/lib/types';
 import Header from '@/components/Header';
 import LinkCard from '@/components/LinkCard';
 import ProfileCard from '@/components/ProfileCard';
@@ -12,43 +12,55 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Plus, Share } from 'lucide-react';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/lib/AuthContext';
 
-const Index = () => {
-  // Demo initial data
-  const [links, setLinks] = useState<Link[]>([
-    {
-      id: uuidv4(),
-      title: 'My Instagram',
-      url: 'https://instagram.com/username',
-      icon: 'Instagram',
-      enabled: true
-    },
-    {
-      id: uuidv4(),
-      title: 'My Twitter',
-      url: 'https://twitter.com/username',
-      icon: 'Twitter',
-      enabled: true
-    },
-    {
-      id: uuidv4(),
-      title: 'My Portfolio Website',
-      url: 'https://myportfolio.com',
-      icon: 'Globe',
-      enabled: true
-    }
-  ]);
+interface IndexProps {
+  userData?: UserData;
+}
+
+const Index: React.FC<IndexProps> = ({ userData }) => {
+  const { currentUser } = useAuth();
+  // Initialize with userData if available, otherwise use demo data
+  const [links, setLinks] = useState<Link[]>(
+    userData?.links || [
+      {
+        id: uuidv4(),
+        title: 'My Instagram',
+        url: 'https://instagram.com/username',
+        icon: 'Instagram',
+        enabled: true
+      },
+      {
+        id: uuidv4(),
+        title: 'My Twitter',
+        url: 'https://twitter.com/username',
+        icon: 'Twitter',
+        enabled: true
+      },
+      {
+        id: uuidv4(),
+        title: 'My Portfolio Website',
+        url: 'https://myportfolio.com',
+        icon: 'Globe',
+        enabled: true
+      }
+    ]
+  );
   
-  const [profile, setProfile] = useState<Profile>({
-    displayName: 'John Doe',
-    bio: 'Digital creator & photographer based in San Francisco',
-    imageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&h=200&auto=format&fit=crop',
-    theme: defaultThemes[0]
-  });
+  const [profile, setProfile] = useState<Profile>(
+    userData?.profile || {
+      displayName: 'John Doe',
+      bio: 'Digital creator & photographer based in San Francisco',
+      imageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&h=200&auto=format&fit=crop',
+      theme: defaultThemes[0]
+    }
+  );
   
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
   const [linkToEdit, setLinkToEdit] = useState<Link | undefined>(undefined);
-  const [hasSaved, setHasSaved] = useState(false);
+  const [hasSaved, setHasSaved] = useState(true);
   
   // Functions for managing links
   const handleAddLink = (link: Link) => {
@@ -96,16 +108,33 @@ const Index = () => {
   };
   
   // Function to handle save
-  const handleSave = () => {
-    // In a real application, this would save to backend
-    toast.success('All changes saved successfully');
-    setHasSaved(true);
+  const handleSave = async () => {
+    if (!currentUser) {
+      toast.error('You must be logged in to save changes');
+      return;
+    }
+
+    try {
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userDocRef, {
+        links: links,
+        profile: profile
+      });
+      
+      toast.success('All changes saved successfully');
+      setHasSaved(true);
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      toast.error('Failed to save changes');
+    }
   };
   
   // Function to handle share
   const handleShare = () => {
-    // In a real application, this would generate a shareable URL
-    navigator.clipboard.writeText(`https://linkme.io/u/${profile.displayName.toLowerCase().replace(/\s+/g, '')}`);
+    const username = userData?.username || profile.displayName.toLowerCase().replace(/\s+/g, '');
+    const shareUrl = `${window.location.origin}/${username}`;
+    
+    navigator.clipboard.writeText(shareUrl);
     toast.success('Link copied to clipboard');
   };
 

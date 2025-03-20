@@ -8,9 +8,10 @@ import * as Icons from 'lucide-react';
 interface MobilePreviewProps {
   profile: Profile;
   links: Link[];
+  onLinkClick?: (linkId: string) => void;
 }
 
-const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links }) => {
+const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links, onLinkClick }) => {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -31,6 +32,15 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links }) => {
   };
 
   const enabledLinks = links.filter(link => link.enabled);
+
+  const handleLinkClick = (link: Link) => {
+    if (onLinkClick) {
+      onLinkClick(link.id);
+    }
+    
+    // Open the link in a new tab
+    window.open(link.url, '_blank');
+  };
 
   return (
     <div className="iphone-frame animate-fade-in">
@@ -70,6 +80,7 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links }) => {
                     variant="outline"
                     className={`w-full justify-start gap-2 ${profile.theme.buttonStyle} transition-all-200`}
                     style={{ animationDelay: `${index * 0.05}s` }}
+                    onClick={() => handleLinkClick(link)}
                   >
                     <IconComponent className="h-4 w-4" />
                     <span className="flex-1 text-left truncate">{link.title}</span>
