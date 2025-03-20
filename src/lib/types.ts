@@ -69,6 +69,41 @@ export const defaultThemes: Theme[] = [
     backgroundColor: '#fef2f2',
     buttonStyle: 'rounded-lg bg-white border border-pink-100 hover:bg-pink-50 shadow-sm',
     fontFamily: 'font-sans'
+  },
+  {
+    id: 'neon',
+    name: 'Neon',
+    backgroundColor: '#0f172a',
+    buttonStyle: 'rounded-lg bg-black/30 border border-purple-500 text-white hover:bg-black/50 shadow-[0_0_15px_rgba(168,85,247,0.5)]',
+    fontFamily: 'font-sans'
+  },
+  {
+    id: 'sunset',
+    name: 'Sunset',
+    backgroundColor: 'bg-gradient-to-br from-orange-100 to-red-100',
+    buttonStyle: 'rounded-lg bg-white/80 border border-orange-200 hover:bg-white shadow-sm',
+    fontFamily: 'font-sans'
+  },
+  {
+    id: 'ocean',
+    name: 'Ocean',
+    backgroundColor: 'bg-gradient-to-br from-blue-100 to-cyan-100',
+    buttonStyle: 'rounded-lg bg-white/80 border border-blue-200 hover:bg-white shadow-sm',
+    fontFamily: 'font-sans'
+  },
+  {
+    id: 'forest',
+    name: 'Forest',
+    backgroundColor: '#f0fdf4',
+    buttonStyle: 'rounded-lg bg-white border border-green-100 hover:bg-green-50 shadow-sm',
+    fontFamily: 'font-sans'
+  },
+  {
+    id: 'midnight',
+    name: 'Midnight',
+    backgroundColor: '#020617',
+    buttonStyle: 'rounded-lg bg-slate-800 border border-slate-700 text-white hover:bg-slate-700 shadow-md',
+    fontFamily: 'font-sans'
   }
 ];
 

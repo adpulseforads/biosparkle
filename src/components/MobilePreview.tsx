@@ -24,8 +24,8 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links, onLinkCli
   const getThemeStyles = () => {
     const theme = profile.theme;
     
-    if (theme.id === 'gradient') {
-      return 'bg-gradient-to-br from-purple-100 to-blue-100';
+    if (theme.backgroundColor.startsWith('bg-gradient')) {
+      return theme.backgroundColor;
     }
     
     return '';
@@ -46,7 +46,7 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links, onLinkCli
     <div className="iphone-frame animate-fade-in">
       <div className="iphone-screen no-scrollbar">
         <div className={`min-h-full p-6 ${getThemeStyles()}`} style={{ 
-          backgroundColor: profile.theme.id !== 'gradient' ? profile.theme.backgroundColor : undefined 
+          backgroundColor: !profile.theme.backgroundColor.startsWith('bg-gradient') ? profile.theme.backgroundColor : undefined 
         }}>
           <div className="flex flex-col items-center pt-6 pb-8 animate-slide-down">
             <Avatar className="h-20 w-20 mb-4">
