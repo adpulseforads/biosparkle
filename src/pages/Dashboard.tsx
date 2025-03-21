@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { UserData, Profile, Link, defaultThemes } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -21,14 +22,18 @@ const Dashboard = () => {
       }
 
       try {
+        console.log("Fetching data for user:", currentUser.uid);
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
           // User data exists
-          setUserData(userDoc.data() as UserData);
+          const data = userDoc.data() as UserData;
+          console.log("User data loaded successfully:", data);
+          setUserData(data);
         } else {
           // Create default user data
+          console.log("Creating new user profile");
           const username = currentUser.email?.split('@')[0]?.toLowerCase() || '';
           const displayName = currentUser.displayName || username || 'User';
           
@@ -73,11 +78,21 @@ const Dashboard = () => {
   }, [currentUser]);
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!currentUser || !userData) {
-    return <div className="flex items-center justify-center min-h-screen">Please sign in to access your dashboard.</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-lg">Please sign in to access your dashboard.</p>
+        </div>
+      </div>
+    );
   }
   
   return <Index userData={userData} />;

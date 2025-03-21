@@ -8,7 +8,7 @@ import { doc, updateDoc, increment } from 'firebase/firestore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import * as Icons from 'lucide-react';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Loader2 } from 'lucide-react';
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -19,6 +19,14 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
+        if (!username) {
+          setError('No username provided');
+          setLoading(false);
+          return;
+        }
+
+        console.log("Fetching profile for username:", username);
+        
         // Query Firestore for the user with the matching username
         const usersRef = collection(db, 'users');
         const q = query(usersRef, where('username', '==', username));
@@ -38,9 +46,14 @@ const UserProfile = () => {
         setUserData(userData);
 
         // Update view count
-        await updateDoc(doc(db, 'users', userDoc.id), {
-          'analytics.views': increment(1)
-        });
+        try {
+          await updateDoc(doc(db, 'users', userDoc.id), {
+            'analytics.views': increment(1)
+          });
+        } catch (analyticsError) {
+          console.error('Failed to update view count, but continuing:', analyticsError);
+          // Don't fail the whole page load for analytics errors
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
         setError('Failed to load profile');
@@ -49,41 +62,20 @@ const UserProfile = () => {
       }
     };
 
-    if (username) {
-      console.log("Fetching profile for username:", username);
-      fetchUserProfile();
-    }
+    fetchUserProfile();
   }, [username]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading profile...</p>
-      </div>
-    );
-  }
-
-  if (error || !userData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
-          <p className="text-gray-500">
-            The profile you're looking for doesn't exist or has been removed.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const handleLinkClick = async (linkId: string) => {
     try {
+      if (!userData) return;
+      
       // Update click count for the user
       await updateDoc(doc(db, 'users', userData.uid), {
         'analytics.clicks': increment(1)
       });
     } catch (error) {
       console.error('Error updating click count:', error);
+      // Don't block the user from following the link if this fails
     }
   };
 
@@ -96,26 +88,45 @@ const UserProfile = () => {
       .slice(0, 2);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !userData) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <div className="text-center max-w-xs mx-auto">
+          <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
+          <p className="text-gray-500">
+            The profile you're looking for doesn't exist or has been removed.
+          </p>
+          <Button onClick={() => window.location.href = '/'} className="mt-4">
+            Return Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Get only the enabled links
   const enabledLinks = userData.links.filter(link => link.enabled);
+  
+  // Set background styles
+  const bgStyle = userData.profile.theme.backgroundColor.startsWith('bg-gradient') 
+    ? { className: userData.profile.theme.backgroundColor } 
+    : { style: { backgroundColor: userData.profile.theme.backgroundColor } };
 
   return (
     <div 
-      className="min-h-screen w-full flex flex-col items-center justify-center animate-fade-in" 
-      style={{ 
-        backgroundColor: userData.profile.theme.backgroundColor.startsWith('bg-gradient') 
-          ? undefined 
-          : userData.profile.theme.backgroundColor
-      }}
+      className="min-h-screen w-full"
+      {...bgStyle}
     >
-      <AspectRatio ratio={9/16} className="w-full max-w-md mx-auto">
-        <div 
-          className={`h-full w-full flex flex-col items-center justify-between p-6 ${
-            userData.profile.theme.backgroundColor.startsWith('bg-gradient') 
-              ? userData.profile.theme.backgroundColor 
-              : ''
-          }`}
-        >
+      <div className="max-w-md mx-auto p-4 h-screen">
+        <div className="h-full flex flex-col items-center">
           <div className="flex-1 flex flex-col items-center justify-center w-full pt-8 pb-4 animate-slide-down">
             <Avatar className="h-24 w-24 mb-4 shadow-lg">
               <AvatarImage 
@@ -171,7 +182,7 @@ const UserProfile = () => {
             </p>
           </div>
         </div>
-      </AspectRatio>
+      </div>
     </div>
   );
 };

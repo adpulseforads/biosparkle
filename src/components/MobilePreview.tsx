@@ -38,8 +38,18 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links, onLinkCli
       onLinkClick(link.id);
     }
     
-    // Open the link in a new tab
-    window.open(link.url, '_blank');
+    // In preview mode, we don't actually open the link
+    // This is intentional to avoid opening links during preview
+  };
+
+  // Check if the image URL is a valid URL
+  const isValidImageUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   return (
@@ -50,11 +60,18 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links, onLinkCli
         }}>
           <div className="flex flex-col items-center pt-6 pb-8 animate-slide-down">
             <Avatar className="h-20 w-20 mb-4 shadow-lg">
-              <AvatarImage 
-                src={profile.imageUrl} 
-                alt={profile.displayName} 
-                className="object-cover"
-              />
+              {isValidImageUrl(profile.imageUrl) ? (
+                <AvatarImage 
+                  src={profile.imageUrl} 
+                  alt={profile.displayName} 
+                  className="object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null; // Prevent infinite loop
+                    console.log("Error loading image in preview, using fallback");
+                  }}
+                />
+              ) : null}
               <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                 {getInitials(profile.displayName || 'User Profile')}
               </AvatarFallback>

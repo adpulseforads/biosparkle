@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ProfileCardProps {
   profile: Profile;
@@ -20,6 +23,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onUpdateProfile }) =
   const [bio, setBio] = useState(profile.bio);
   const [imageUrl, setImageUrl] = useState(profile.imageUrl);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +35,34 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onUpdateProfile }) =
     });
     setIsEditing(false);
     toast.success('Profile updated successfully');
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      setIsUploading(true);
+      // Create a unique file name
+      const fileId = uuidv4();
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `profile-images/${fileId}.${fileExtension}`;
+      
+      // Create a reference to the storage location
+      const storageRef = ref(storage, fileName);
+      
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      // Update the image URL state
+      setImageUrl(downloadURL);
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -57,7 +89,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onUpdateProfile }) =
             {isEditing && (
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all-200">
                 <label htmlFor="avatar-upload" className="cursor-pointer bg-black/50 rounded-full p-2">
-                  <Camera className="h-5 w-5 text-white" />
+                  {isUploading ? (
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
                   <input 
                     id="avatar-upload" 
                     type="file" 
@@ -66,12 +102,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onUpdateProfile }) =
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        // In a real app, you would upload this file to a server
-                        // For now, we'll just create a local URL
-                        const url = URL.createObjectURL(file);
-                        setImageUrl(url);
+                        handleImageUpload(file);
                       }
                     }}
+                    disabled={isUploading}
                   />
                 </label>
               </div>
@@ -117,7 +151,20 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onUpdateProfile }) =
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="transition-all-200">Save Changes</Button>
+                <Button 
+                  type="submit" 
+                  className="transition-all-200"
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
               </div>
             </form>
           ) : (
