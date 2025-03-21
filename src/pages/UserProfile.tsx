@@ -8,6 +8,7 @@ import { doc, updateDoc, increment } from 'firebase/firestore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import * as Icons from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -100,65 +101,77 @@ const UserProfile = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in" 
+      className="min-h-screen w-full flex flex-col items-center justify-center animate-fade-in" 
       style={{ 
         backgroundColor: userData.profile.theme.backgroundColor.startsWith('bg-gradient') 
           ? undefined 
           : userData.profile.theme.backgroundColor
       }}
     >
-      <div className={`max-w-md w-full mx-auto py-8 px-4 rounded-xl ${userData.profile.theme.backgroundColor.startsWith('bg-gradient') ? userData.profile.theme.backgroundColor : ''}`}>
-        <div className="flex flex-col items-center pt-4 pb-6 animate-slide-down">
-          <Avatar className="h-24 w-24 mb-4">
-            <AvatarImage src={userData.profile.imageUrl} alt={userData.profile.displayName} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-              {getInitials(userData.profile.displayName || 'User Profile')}
-            </AvatarFallback>
-          </Avatar>
+      <AspectRatio ratio={9/16} className="w-full max-w-md mx-auto">
+        <div 
+          className={`h-full w-full flex flex-col items-center justify-between p-6 ${
+            userData.profile.theme.backgroundColor.startsWith('bg-gradient') 
+              ? userData.profile.theme.backgroundColor 
+              : ''
+          }`}
+        >
+          <div className="flex-1 flex flex-col items-center justify-center w-full pt-8 pb-4 animate-slide-down">
+            <Avatar className="h-24 w-24 mb-4 shadow-lg">
+              <AvatarImage 
+                src={userData.profile.imageUrl} 
+                alt={userData.profile.displayName} 
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                {getInitials(userData.profile.displayName || 'User Profile')}
+              </AvatarFallback>
+            </Avatar>
+            
+            <h1 className="text-center text-xl font-semibold mb-1">
+              {userData.profile.displayName || 'Your Name'}
+            </h1>
+            
+            <p className="text-center text-sm text-gray-600 max-w-xs mx-auto">
+              {userData.profile.bio || 'Your bio will appear here'}
+            </p>
+          </div>
           
-          <h1 className="text-center text-xl font-semibold mb-1">
-            {userData.profile.displayName || 'Your Name'}
-          </h1>
+          <div className="w-full space-y-3 animate-slide-up flex-1 overflow-y-auto">
+            {enabledLinks.length === 0 ? (
+              <div className="text-center text-sm text-gray-500 py-8">
+                No active links to display
+              </div>
+            ) : (
+              enabledLinks.map((link, index) => {
+                const IconComponent = (Icons as any)[link.icon] || Icons.Link;
+                
+                return (
+                  <Button
+                    key={link.id}
+                    variant="outline"
+                    className={`w-full justify-start gap-2 ${userData.profile.theme.buttonStyle} transition-all-200`}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                    onClick={() => {
+                      handleLinkClick(link.id);
+                      window.open(link.url, '_blank');
+                    }}
+                  >
+                    <IconComponent className="h-4 w-4" />
+                    <span className="flex-1 text-left truncate">{link.title}</span>
+                  </Button>
+                );
+              })
+            )}
+          </div>
           
-          <p className="text-center text-sm text-gray-600 max-w-xs mx-auto">
-            {userData.profile.bio || 'Your bio will appear here'}
-          </p>
+          <div className="mt-4 pt-2 text-center w-full">
+            <p className="text-xs text-gray-500">
+              Powered by LinkMe
+            </p>
+          </div>
         </div>
-        
-        <div className="space-y-3 animate-slide-up">
-          {enabledLinks.length === 0 ? (
-            <div className="text-center text-sm text-gray-500 py-8">
-              No active links to display
-            </div>
-          ) : (
-            enabledLinks.map((link, index) => {
-              const IconComponent = (Icons as any)[link.icon] || Icons.Link;
-              
-              return (
-                <Button
-                  key={link.id}
-                  variant="outline"
-                  className={`w-full justify-start gap-2 ${userData.profile.theme.buttonStyle} transition-all-200`}
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                  onClick={() => {
-                    handleLinkClick(link.id);
-                    window.open(link.url, '_blank');
-                  }}
-                >
-                  <IconComponent className="h-4 w-4" />
-                  <span className="flex-1 text-left truncate">{link.title}</span>
-                </Button>
-              );
-            })
-          )}
-        </div>
-        
-        <div className="mt-8 pt-4 text-center">
-          <p className="text-xs text-gray-500">
-            Powered by LinkMe
-          </p>
-        </div>
-      </div>
+      </AspectRatio>
     </div>
   );
 };

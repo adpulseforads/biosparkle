@@ -49,8 +49,12 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({ profile, links, onLinkCli
           backgroundColor: !profile.theme.backgroundColor.startsWith('bg-gradient') ? profile.theme.backgroundColor : undefined 
         }}>
           <div className="flex flex-col items-center pt-6 pb-8 animate-slide-down">
-            <Avatar className="h-20 w-20 mb-4">
-              <AvatarImage src={profile.imageUrl} alt={profile.displayName} />
+            <Avatar className="h-20 w-20 mb-4 shadow-lg">
+              <AvatarImage 
+                src={profile.imageUrl} 
+                alt={profile.displayName} 
+                className="object-cover"
+              />
               <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                 {getInitials(profile.displayName || 'User Profile')}
               </AvatarFallback>
